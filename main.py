@@ -11,7 +11,7 @@ import re
 class YouTubePlayerApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Reproductor de YouTube Avanzado")
+        self.root.title("Reproductor de YouTube")
         self.root.geometry("900x700")
         # Cambiar el icono (ajusta la ruta según tu archivo)
         try:
@@ -91,16 +91,40 @@ class YouTubePlayerApp:
     def set_status(self, text):
         self.status_label.config(text=text)
 
+    def _is_valid_youtube_url(self, url):
+        """Valida que la URL sea de YouTube y tenga formato correcto."""
+        if not url or not isinstance(url, str):
+            return False
+        
+        # Patrones válidos para URLs de YouTube
+        youtube_patterns = [
+            r'^https?://(www\.)?youtube\.com/watch\?v=([a-zA-Z0-9_-]{11})',
+            r'^https?://(www\.)?youtu\.be/([a-zA-Z0-9_-]{11})',
+            r'^https?://(www\.)?youtube\.com/embed/([a-zA-Z0-9_-]{11})',
+            r'^https?://(www\.)?youtube\.com/v/([a-zA-Z0-9_-]{11})'
+        ]
+        
+        for pattern in youtube_patterns:
+            if re.match(pattern, url):
+                return True
+        return False
+
     def load_video(self):
-        url = self.url_entry.get()
+        url = self.url_entry.get().strip()
         if not url:
             messagebox.showerror("Error", "Por favor, introduce una URL de YouTube.")
             return
+            
+        # Validar que sea una URL de YouTube válida
+        if not self._is_valid_youtube_url(url):
+            messagebox.showerror("Error", "Por favor, introduce una URL válida de YouTube.")
+            return
+            
         if not self.initialize_vlc():
             return
 
         self.current_url = url
-        self.set_status(f"Cargando información para: {url}...")
+        self.set_status("Cargando información del video...")
         self.reset_ui()
         
         thread = threading.Thread(target=self._get_video_info_thread)
@@ -170,7 +194,8 @@ class YouTubePlayerApp:
             self.root.after(0, self._on_video_info_loaded, info_dict.get('title', 'Video'))
 
         except Exception as e:
-            self.root.after(0, messagebox.showerror, "Error", f"No se pudo obtener la información del video: {e}")
+            # No exponer detalles del error por seguridad
+            self.root.after(0, messagebox.showerror, "Error", "No se pudo obtener la información del video. Verifica la URL e intenta nuevamente.")
             self.root.after(0, self.load_button.config, {"state": "normal"})
             self.root.after(0, self.set_status, "Error al cargar. Intenta con otra URL.")
 
@@ -274,7 +299,8 @@ class YouTubePlayerApp:
             self.root.after(0, self.set_status, f"Reproduciendo en {self.quality_var.get()}")
 
         except Exception as e:
-            self.root.after(0, messagebox.showerror, "Error de Reproducción", f"No se pudo cargar el stream: {e}")
+            # No exponer detalles del error por seguridad
+            self.root.after(0, messagebox.showerror, "Error de Reproducción", "No se pudo cargar el stream. Intenta con otra calidad.")
             self.root.after(0, self.play_pause_button.config, {"state": "normal"})
             self.root.after(0, self.set_status, "Error al cambiar de calidad.")
 
@@ -355,7 +381,8 @@ class YouTubePlayerApp:
             self.root.after(0, self.set_status, f"No se pudo descargar el subtítulo '{lang_name}'.")
                 
         except Exception as e:
-            self.root.after(0, messagebox.showerror, "Error de Subtítulo", f"No se pudo descargar: {e}")
+            # No exponer detalles del error por seguridad
+            self.root.after(0, messagebox.showerror, "Error de Subtítulo", "No se pudo descargar el subtítulo.")
             self.root.after(0, self.set_status, "Error al descargar subtítulo.")
 
     def _get_subtitle_url(self, lang_code):
@@ -460,7 +487,8 @@ class YouTubePlayerApp:
             return False
             
         except Exception as e:
-            print(f"Error en método alternativo: {e}")
+            # Logging interno sin exponer al usuario
+            # print(f"Error en método alternativo: {e}")  # Comentado por seguridad
             return False
 
     def _apply_subtitle_to_player(self):
@@ -486,12 +514,14 @@ class YouTubePlayerApp:
                 # Esperar un poco y activar la primera pista de subtítulos
                 time.sleep(0.5)
                 self.player.video_set_spu(0)
-                print(f"Subtítulo aplicado: {file_uri}")
+                # print(f"Subtítulo aplicado: {file_uri}")  # Comentado por seguridad
             else:
-                print(f"Error al agregar subtítulo: {result}")
+                # print(f"Error al agregar subtítulo: {result}")  # Comentado por seguridad
+                pass
                 
         except Exception as e:
-            print(f"Error aplicando subtítulo: {e}")
+            # print(f"Error aplicando subtítulo: {e}")  # Comentado por seguridad
+            pass
 
     def play_pause(self):
         if self.player: 
