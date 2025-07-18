@@ -1,5 +1,5 @@
 
-# Reproductor de YouTube Avanzado
+# Reproductor de YouTube
 
 Este proyecto es una aplicación de escritorio para reproducir videos de YouTube con funcionalidades avanzadas, desarrollada en Python usando Tkinter para la interfaz gráfica y VLC como motor de reproducción.
 
